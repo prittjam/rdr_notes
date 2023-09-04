@@ -1,0 +1,299 @@
+\documentclass[8pt,aspectratio=169]{beamer}
+\input{preamble}
+\input{defs}
+\input{mathdefs}
+\input{visiondefs}
+\input{beamertheme}
+\addbibresource{notes.bib}
+
+\logo{\includegraphics{img/logo-en}}
+
+\setcounter{MaxMatrixCols}{20}
+
+\title{Covariance Propagation}
+\subtitle{Propogation through an unconstrained solver}
+\date{\today}
+\author{James Pritts}
+\institute{Ukrainian Catholic University}
+\titlegraphic{\includegraphics[height=2.5cm]{img/covariance.png}}
+
+\begin{document} 
+
+\maketitle
+
+\begin{frame}{Table of contents}
+  \setbeamertemplate{section in toc}[sections numbered]
+  \tableofcontents%[hideallsubsections]
+\end{frame}
+
+\section[Intro]{Introduction}
+
+\begin{frame}[fragile]{Measurement Errors}
+  Can we improve vision algorithms by modeling inexact measurements?
+
+  \begin{itemize}
+  \item Errors accumulate during measurement. 
+  \item Vision algorithms assume measurements are exact.
+  \item Photogrammetry typically incorporates error analysis.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Random Errors}
+  \begin{definition}{Random errors} in experimental measurements are caused by unknown and unpredictable changes in the experiment.
+  \end{definition}
+
+  \begin{itemize}
+    \item Errors are introduced by the feature extractor or the environmental conditions.
+    \item An example of a source of random error is CCD noise.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Modeling Random Errors}
+  We assume that our feature extractors do not have systematic error,
+  or that they are unbiased estimators.
+  
+  \begin{itemize}
+  \item Measurements are modeled as random variables.
+  \item The measurement is the sum of many unobserved random factors.
+  \item The Central Limit Theorem is used to justify the
+    representation of measurements as Gaussian random vectors.
+  \end{itemize}
+\end{frame}
+
+%\section{Titleformats}
+
+\begin{frame}[fragile]{Linear Transformation of a Distribution}
+  \begin{theorem}
+    Suppose $\vX \sim p_{\vX}(\vx)$ and $\ma{J}$ is an an invertible matrix. Then the 
+    density of $\vY = \ma{J}\vX$ is 
+    \[p_{\vY}(\vy) = \frac{p_{\vX} (\inv{\ma{J}} \vy)}{| \det \ma{J} |} \]
+  \end{theorem}
+\end{frame}
+
+\begin{frame}[fragile]{Linear Transformation of a Gaussian is Gaussian}
+  \begin{theorem}
+    Suppose $\vX \sim \mathcal{N}(\mu_{\vX},\Sigma_{\vX})$ and
+    $\ma{J}$ is an an invertible matrix. Then the density of $\vY =
+    \ma{J}\vX$ is
+    \begin{align*}
+      p_{\vY}(\vy) &= \frac{p_{\vX}(\inv{\ma{J}} \vy)}{| \det \ma{J} |}  \\
+      &= \mathcal{N}(\ma{J}\vX,\ma{J}\Sigma_{\vX}\ma{J}^{\T})  \\
+      &= \mathcal{N}(\vY,\Sigma_{\vY})  \\
+    \end{align*}
+  \end{theorem}
+\end{frame}
+
+\begin{frame}[fragile]{Explicit Function}
+  Suppose $\vy = \vy(\vx)$ and let $\vx = \mu_{\vx}+\Delta\vx$. Linearize $\vy$ about $\mu_{\vx}$,
+  \[
+  \vy(\mu_{\vx}+\Delta\vx)=\vy(\mu_{\vx})+\ma{J}_{\vy}(\mu_{\vx})\Delta \vx + \mathcal{O}(\|\Delta\vx\|^2)
+  \]
+
+  Start with the definition of the covariance for the output $\vy$
+  \begin{align*}
+    \Sigma_{\vy} &= \mathbb{E}\left[(\vy-\mu_{\vy})(\vy-\mu_{\vy})^{T}\right] \\
+    &= \mathbb{E}\left[\left(\vy(\mu_{\vx}+\Delta\vx)-\mu_{\vy}\right)\left(\vy(\mu_{\vx}+\Delta\vx)-\mu_{\vy}\right)^{T}\right] 
+  \end{align*}
+
+  Assume $\mu_{\vy} \approx \vy(\mu_{\vx})$ and $\vy(\mu_{\vx}+\Delta\vx) \approx \vy(\mu_{\vx})+\nabla \vy(\mu_{\vx})\Delta \vx$, then 
+  \begin{align*}
+    \Sigma_{\vy} & \approx \mathbb{E}\left[\left(\vy(\mu_{\vx}+\Delta\vx)-\vy(\mu_{\vx})\right)\left(\vy(\mu_{\vx}+\Delta\vx)-\vy(\mu_{\vx})\right)^{T}\right] \\
+    & \approx \mathbb{E}\left[\ma{J}_{\vy}(\mu_{\vx})\Delta\vx\Delta\vx^{\T}\ma{J}_{\vy}(\mu_{\vx})^{\T}\right] \\
+    & \approx \ma{J}_{\vy}(\mu_{\vx})\Sigma_{\vx}\ma{J}_{\vy}(\mu_{\vx})^{\T}
+  \end{align*}
+  
+  $\mu_{\vx}$ is unknown, but if $\Delta\vx$ is small
+  \begin{equation}
+    \Sigma_{\vy} \approx \ma{J}_{\vy}(\vx)\Sigma_{\vx}\ma{J}_{\vy}(\vx)^{\T}.
+    \label{eq:cov_prop}
+  \end{equation}
+\end{frame}
+
+\begin{frame}[fragile]{Regression}
+  Given some measurements $\vx$ and a differentiable
+  objective $\mathcal{J}$, solve for parameters $\vy^{*}$
+  by
+  \[ \vy^{*} = \argmin_{\vy} \mathcal{J}(\vx,\vy) \]
+
+  Satisfying the constraint
+  \[  \diffp*{\mathcal{J}(\vx,\vy)}{\vy}{(\vx[0],\vy^{*})} = 0. \]
+  is a necessary condition for $\vy^{*}$ to be a local minimium for
+  measurements \vx[0].
+
+  \vspace{1em}
+
+  Referring to (1), we require $\ma{J}_{\vy}(\vx)$ to propogate.
+\end{frame}
+
+\begin{frame}[fragile]{Implicit Function Theorem}
+  \begin{theorem}
+    Suppose $\vphi(\vx,\vy)$ is differentiable,
+    $\vphi(\vx[0],\vy^{*})=\v0$ and $\left|
+    \diffp*{\vphi}{\vy}{(\vx[0],\vy^{*})} \right| \neq 0$. Then there
+    is a unique and differentiable function $\vy(\vx)$ in the
+    neighborhood of $(\vx[0],\vy^{*})$ so that
+    $\vphi(\vx,\vy(\vx))=\v0$.
+  \end{theorem}
+  \vspace{1em}
+  The parametric form of $\vy(\vx)$ may be unknown.
+\end{frame}
+
+
+\begin{frame}[fragile]{Implicit Differentiation}
+  Suppose there are sufficient conditions on \vphi \xspace to invoke the
+  Implicit Function Theorem. Then we can derive the expression for
+  $\ma{J}_{\vy}$.
+
+  \vspace{1em}
+  Impilcitly differentiate $\vphi$,
+  \[
+  \diff{\vphi}{\vx} = \diffp{\vphi}{\vx}+\diffp{\vphi}{\vy}\diff{\vy}{\vx} = \v0
+  \]
+
+  and solve for   $\diff{\vy}{\vx}$
+
+  \[
+  \diff{\vy}{\vx} = -\inv{\left( \diffp{\vphi}{\vy} \right)} \diffp{\vphi}{\vx}
+  \]
+
+  where 
+  \begin{equation}
+    \ma{J}_{\vy} = \diff{\vy}{\vx}.
+  \end{equation}
+\end{frame}
+
+\begin{frame}[fragile]{Propogating through Unconstrainted Optimization}
+  Let $\vphi(\vx,\vy) = \diffp{\mathcal{J}(\vx,\vy)}{\vy}$ and suppose
+  $\diffp*{\mathcal{J}(\vx,\vy)}{\vy}{(\vx[0],\vy^{*})} =
+  \v0$.
+
+  \vspace{1em}
+
+  Applying (2), we have
+
+  \begin{equation}
+    \ma{J}_{\vy} = \inv{\left(\diffp[2]{\mathcal{J}}{\vy}\right)}\diffp{\mathcal{J}}{\vy\vx}
+  \end{equation}
+
+  Let $\ma{H}_{\mathcal{J}}$ be the hessian of $\mathcal{J}$ w.r.t. \vy, and substitute
+
+  \begin{equation}
+    \ma{J}_{\vy} = \ma{H}_{\mathcal{J}} \diffp{\vphi}{\vx}
+  \end{equation}
+  
+\end{frame}
+
+
+%\begin{frame}[fragile]{Gauss-Newton Approximation to the Hessian}
+%  Suppose $\mathcal{J}(\vx,\vy)=\|\ve(\vx,\vy)\|_2^2$.
+%  \vspace{1em}y
+%  Then
+%  \[
+%  \ma{H}_{\mathcal{J}} = 2\left(\ma{J}^{\T}_{\mathcal{J}}\ma{J}_{\mathcal{J}}+\sum_i e_i(\vx,\vy)^{\T} \right)
+%  \]
+%\end{frame}
+
+\begin{frame}
+  Then (1) can be applied to propogate the covariance
+
+  \begin{equation}
+    \Sigma_{\vy} \approx \ma{J}_{\vy}(\vx)\Sigma_{\vx}\ma{J}_{\vy}(\vx)^{\T}.
+  \end{equation}
+\end{frame}
+
+\begin{frame}[fragile]{Seven-point Method}
+  The fundamental matrix \mF\xspace is a rank-two matrix that relates
+  pt. correspondences, denoted $\{\,\cspond{\vx[i]}{\vxp[i]}\,\}$, in
+  stereo images.
+  \medskip
+
+  The epioplar line $\vl = \ma{F}\vx$ in the second image contains \vxp.
+  \medskip
+
+  This epipolar constraint $\vx^{\prime \T} \ma{F} \vx=0$ can be
+  written as
+  \[
+    \label{eq:billinear_form}
+    \vm^{\T}_i \operatorname{vec}(\ma{F}) = \vx[i] \otimes \vxp[i]  \operatorname{vec}(\ma{F}) = 0.
+    \]
+
+  $\ma{F}$ has 7 degrees of freedom, so 7 equations are needed.
+  \medskip  
+
+  Letting $\vf = \operatorname{vec}(\ma{F}^{\T})$ we have
+  \[
+  \ma{M}\vf = \v0
+  \]
+  where $\ma{M} \in \R[7 \times 9]$
+\end{frame}
+
+\begin{frame}[fragile]{Imposing Rank Two Constraint}
+  Denote the null space basis vectors of $\ma{M}$ as $\vf_1$ and $\vf_2$.
+  \medskip
+  
+  $\ma{F}$ is singular so,
+  \[\det \inv{\operatorname{vec}_{3\times3}} (\vf_1+\alpha_i \vf_2) = 0\]
+
+  One or three real solutions for $\alpha$ are used to construct $\ma{F}_i$
+  \begin{equation}
+    \label{eq:estimateF}
+    \ma{F}_i = \inv{\operatorname{vec}_{3\times3}} (\vf_1+\alpha_i \vf_2)^{\T}.
+  \end{equation}
+
+  Let $\ma{F} \in \{ \ma{F}_i \}$ be a solution.
+  \medskip
+  Given nonzero $\lambda$, $\lambda \ma{F}^{*}_i$ is also a solution.
+  \medskip
+  
+  Restrict solutions to lie on the hypersphere
+  \[
+  \ma{F}^{*} = \frac{\ma{F}}{\| \ma{F}^{*} \|}
+  \]
+\end{frame}
+
+\begin{frame}[fragile]{Covariance Propagation}
+  Consider the constraint equations as residuals, namely
+  \[
+  \mathcal{J}(\vx,\vf)= \| \ma{M}\vf \|^2 = \|\vepsilon \|^2 = \sum_i \vepsilon_i^2  = \sum_i \| \vx[i]^{\prime \T} \ma{F} \vx[i] \|^2
+  \]
+  
+  Let $\ma{F}^{*}$ be computed for measurements \vx[0] by the seven-point method.
+  \bigskip
+
+  $\mathcal{J}(\vx[0],\vf^{*})$ is 0, so  $\diffp*{\mathcal{J}(\vx,\vf)}{\vf}{(\vx[0],\vf^{*})} = \v0$.
+\end{frame}
+
+\begin{frame}
+  $\vf^{*}$ is not a minimial parameterization.
+  \bigskip
+
+  We must account for the rank two constaint and scale ambiguity.
+  \bigskip
+  
+  Let $\alpha,\beta \in \R,$ amd $g_2 \in \R[3]$ and $g_3 \in \R[2]$, and $g_1 = \alpha g_2 + \beta \colvec{2}{g_3}{f_{33}}$
+
+  Then parameter vector $\theta = (\alpha,\beta,g_2,g_3)$
+  \[
+  \vf(\theta) = \colvec{4}{g_1}{g_2}{g_3}{f_{33}}
+  \]
+
+  and the objective becomes $\mathcal{J}(\vx,\theta)$
+\end{frame}
+
+\begin{frame}
+  \begin{equation}
+    \ma{J}_{\theta} = \inv{\left(\diffp[2]{\mathcal{J}}{\theta}\right)}\diffp{\mathcal{J}}{\theta \vx}
+  \end{equation}
+  \bigskip
+  where $\ma{J}_{\theta} \in \R[7 \times 28]$ so that $\Sigma_{\theta} = \ma{J}_{\theta}\Sigma_{\vx}\ma{J}^{\T}_{\theta} $
+
+  \bigskip
+  and
+
+  \bigskip
+  $\ma{J}_{\vf} = \diff{\vf}{\theta}$ so that  $\Sigma_f = \ma{J}_{\vf} \Sigma_{\theta} \ma{J}^{\T}_{\vf}$.
+
+
+\end{frame}
+
+\end{document}

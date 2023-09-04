@@ -1,0 +1,398 @@
+\documentclass[8pt,aspectratio=169]{beamer}
+\input{preamble}
+\input{latex/defs}
+\input{latex/mathdefs}
+\input{latex/visiondefs}
+\input{latex/beamertheme}
+\addbibresource{notes.bib}
+
+\logo{\includegraphics{img/logo-en}}
+
+\setcounter{MaxMatrixCols}{20}
+
+\title{Covariance Propagation}
+\subtitle{Propogation through an unconstrained solver}
+\date{\today}
+\author{James Pritts}
+\institute{Ukrainian Catholic University}
+\titlegraphic{\includegraphics[height=2.5cm]{img/covariance.png}}
+
+\begin{document} 
+
+\maketitle
+
+\begin{frame}{Table of contents}
+  \setbeamertemplate{section in toc}[sections numbered]
+  \tableofcontents%[hideallsubsections]
+\end{frame}
+
+\section[Intro]{Introduction}
+
+\begin{frame}[fragile]{Measurement Errors}
+  Can we improve vision algorithms by modeling inexact measurements?
+
+  \begin{itemize}
+  \item Errors accumulate during measurement. 
+  \item Vision algorithms assume measurements are exact.
+  \item Photogrammetry typically incorporates error analysis.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Random Errors}
+  \begin{definition}{Random errors} in experimental measurements are caused by unknown and unpredictable changes in the experiment.
+  \end{definition}
+
+  \begin{itemize}
+    \item Errors are introduced by the feature extractor or the environmental conditions.
+    \item An example of a source of random error is CCD noise.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Modeling Random Errors}
+  We assume that our feature extractors do not have systematic error,
+  or that they are unbiased estimators.
+  
+  \begin{itemize}
+  \item Measurements are modeled as random variables.
+  \item The measurement is the sum of many unobserved random factors.
+  \item The Central Limit Theorem is used to justify the
+    representation of measurements as Gaussian random vectors.
+  \end{itemize}
+\end{frame}
+
+\section{Covariance Propagation}
+
+\begin{frame}[fragile]{Linearly Transforming a Distribution}
+  \begin{theorem}
+    Suppose $\vbX \sim p_{\vbX}(\vbx)$ and $\vbJ$ is an an invertible matrix. Then the 
+    density of $\vbY = \vbJ\vbX$ is 
+    \[p_{\vbY}(\vby) = \frac{p_{\vbX} \left(\vbJ^{\inv} \vby\right)}{|\det \vbJ|} \]
+  \end{theorem}
+\end{frame}
+
+\begin{frame}[fragile]{Linear Transformation of a Gaussian is Gaussian}
+  \begin{theorem}
+    Suppose $\vbX \sim \mathcal{N}(\vbmu_{\vbX},\Sigma_{\vbX})$ and
+    $\vbJ$ is an an invertible matrix. Then the density of $\vbY =
+    \vbJ\vbX$ is
+    \begin{align*}
+      p_{\vbY}(\vby) &= \frac{p_{\vbX}(\vbJ^{\inv}\vby)}{| \det \vbJ |}  \\
+      &= \mathcal{N}(\vbJ\vbX,\vbJ\Sigma_{\vbX}\vbJ^{\T})  \\
+      &= \mathcal{N}(\vbY,\Sigma_{\vbY})  \\
+    \end{align*}
+  \end{theorem}
+\end{frame}
+
+\begin{frame}[fragile]{Explicit Covariance Propogation}
+  Suppose $\vby = \vby(\vbx)$ and let $\vbx = \mu_{\vbx}+\Delta\vbx$. Linearize $\vby$ about $\mu_{\vbx}$,
+  \[
+  \vby(\mu_{\vbx}+\Delta\vbx)=\vby(\mu_{\vbx})+\vbJ_{\vby}(\mu_{\vbx})\Delta \vbx + \mathcal{O}(\|\Delta\vbx\|^2)
+  \]
+
+  Start with the definition of the covariance for the output $\vby$
+  \begin{align*}
+    \Sigma_{\vby} &= \mathbb{E}\left[(\vby-\mu_{\vby})(\vby-\mu_{\vby})^{T}\right] \\
+    &= \mathbb{E}\left[\left(\vby(\mu_{\vbx}+\Delta\vbx)-\mu_{\vby}\right)\left(\vby(\mu_{\vbx}+\Delta\vbx)-\mu_{\vby}\right)^{T}\right] 
+  \end{align*}
+
+  Assume $\mu_{\vby} \approx \vby(\mu_{\vbx})$ and $\vby(\mu_{\vbx}+\Delta\vbx) \approx \vby(\mu_{\vbx})+\nabla \vby(\mu_{\vbx})\Delta \vbx$, then 
+  \begin{align*}
+    \Sigma_{\vby} & \approx \mathbb{E}\left[\left(\vby(\mu_{\vbx}+\Delta\vbx)-\vby(\mu_{\vbx})\right)\left(\vby(\mu_{\vbx}+\Delta\vbx)-\vby(\mu_{\vbx})\right)^{T}\right] \\
+    & \approx \mathbb{E}\left[\vbJ_{\vby}(\mu_{\vbx})\Delta\vbx\Delta\vbx^{\T}\vbJ_{\vby}(\mu_{\vbx})^{\T}\right] \\
+    & \approx \vbJ_{\vby}(\mu_{\vbx})\Sigma_{\vbx}\vbJ_{\vby}(\mu_{\vbx})^{\T}
+  \end{align*}
+  
+  $\mu_{\vbx}$ is unknown, but if $\Delta\vbx$ is small
+  \begin{equation}
+    \label{eq:cov_prop}
+    \Sigma_{\vby} \approx \vbJ_{\vby}(\vbx)\Sigma_{\vbx}\vbJ_{\vby}(\vbx)^{\T}.
+  \end{equation}
+\end{frame}
+
+\begin{frame}[fragile]{Implicit Function Theorem}
+  \begin{theorem}[Implicit function]
+    \label{thm:implicit_function}
+    Let $\vbphi(\vbx,\vbz): \Re^m \times \Re^n \to \Re^n$ be an
+    implicit function and suppose that
+    \begin{enumerate}[(i)]
+    \item $(\vbx,\vbz) \in \Re^m\times\Re^n$,
+    \item function $\vbphi$ is differentiable,
+    \item $\vbphi(\vbx_i,\vbz^*)=\vbzero$, and
+    \item $\det \pdv{\vbphi}{\vbz}_{(\vbx,\vbz^*)} \neq 0$.
+    \end{enumerate}
+    Then there is the unique and differentiable function $\vbz(\vbx)$ in the open neighborhood of
+    $(\vbx,\vbz^*)$ so that $\vbphi(\vbx, \vbz(\vbx))=\vbzero$.
+  \end{theorem}
+
+  \smallskip
+  
+  \begin{remark}
+    Suppose that $\vbphi$ satisfied the sufficient conditions to
+    invoke the Implicit Function Theorem. Then we compute an expression
+    for $\odv{\vbz}/{\vbx}$ without knowing the functional form of
+    $\vbz(\vbx)$. 
+  \end{remark}
+\end{frame}
+
+\begin{frame}{Implicit Differentiation}
+  \begin{theorem}
+    \label{corr:implicit_diff}
+    Let $\vbz(\vbx): \Re^m \to \Re^n$ and implicitly defined by
+    $\phi(\vbx,\vbz)=\vbz-\vbz(x)=\vbzero$ and suppose that $\vbphi$ satisfies the sufficient
+    conditions of \eqref{thm:implicit_function}. Then $\odv{\vbz}{\vbx}$
+    exists and is computable.
+  \end{theorem}
+
+  \begin{proof}
+  Impilcitly differentiate $\vbphi$
+  \[
+    \odv{\vbphi}{\vbx} = \pdv{\vbphi}{\vbx}+\pdv{\vbphi}{\vbz}\odv{\vbz}{\vbx} = \vbzero,
+  \]
+  and solve for $\odv{\vbz}/{\vbx}$
+  \[
+    \odv{\vbz}{\vbx} = -\pdv{\vbphi}{\vbz}^{\inv}\pdv{\vbphi}{\vbx}
+  \]
+  to compute its functional form.
+\end{proof}
+\end{frame}
+
+\begin{frame}{Regression}
+  \begin{problem}[Optimization]
+    Given $\vbx$ and a differentiable function $\mathcal{J}$, solve for
+    parameters $\vbz^{*}$ such that
+    \[
+      \label{eq:minimization_problem}
+      \vbz^{*} = \argmin_{\vbz} \mathcal{J}(\vbx,\vbz).
+    \]
+  \end{problem}
+
+  \smallskip
+
+  \begin{definition}[First-order optimality]
+    The constraint
+    \[
+      \pdv{\mathcal{J}}{\vbz}_{(\vbx,\vbz^*)} = \vbzero^{\T}.
+    \]
+    must be satisfied for $\vbz^*$ to be locally optimal.
+  \end{definition}
+
+  \smallskip
+
+  \begin{desiderata}[Parameter uncertainty]
+    Referring to \eqref{eq:cov_prop}, we need to compute
+    $\odv{\vbz}/{\vbx}$ to propagate errors from measurements to
+    parameters.
+  \end{desiderata}
+\end{frame}
+
+
+\begin{frame}[fragile]{Uncosntrained Minimization}
+  Suppose $\vbz^*$ is a local minimizer of the objective
+  $\mathcal{J}(\vbx,\vbz)$. Then we have the first-order optimality
+  condition
+  \[
+    \pdv{\mathcal{J}}{\vbz}_{(\vbx,\vbz^*)}=\vbzero^{\T}.
+  \]
+
+  \smallskip
+  
+  Applying \eqref{corr:implicit_diff}, we have
+  \begin{equation}
+    \odv{\vbz}{\vbx} = \left(\pdv[order=2]{\mathcal{J}}{\vbz}\right)^\inv\pdv{\mathcal{J}}{\vbz,\vbx}
+  \end{equation}
+
+  \smallskip
+  
+  For concision, we use the matrix notations for Jacobain and Hessian going forward,
+  \begin{equation}
+    \label{eq:dz_dx}
+    \vbJ_{\vbz} = \odv{\vbz}{\vbx} \qquad \vbH_{\mathcal{J}} =\pdv[order=2]{\mathcal{J}}{\vbz}.
+  \end{equation}
+\end{frame}
+
+\begin{frame}{Covariance Propagation}
+  \begin{remark}
+    We obtain the functional form of $\vbJ_{\vbz}$ from
+    \eqref{eq:dz_dx} even though we don't know $\vbz(\vbx)$.
+  \end{remark}
+  
+  We can substitute $\vbJ_z$ into \eqref{eq:cov_prop} to compute the
+  uncertainty of the parameters,
+  \[
+    \vbSigma_{\vbz} = \vbJ_z \vbSigma_{\vbx}\vbJ^{\T}_z.
+  \]
+\end{frame}
+
+\begin{frame}{Scale Equivariance of Covariance}
+  \begin{lemma}
+    Suppose that minimizer $\vbz$ has covariance $\vbSigma_{\vbz}$.
+    Then $\alpha \vbz$ has covariance $\alpha^2 \vbSigma_{\alpha}$.
+  \end{lemma}
+  \begin{proof}
+  \[
+    \begin{split}
+      \vbSigma_{\alpha\vba} &= \EE\brackets{(\alpha\vba-\alpha\bar{\vba})(\alpha\vba-\alpha\bar{\vba})} \\
+                            &= \EE\brackets{ \alpha^2(\vba-\bar{\vba})(\vba-\bar{\vba})} \\
+                            &= \alpha^2 \EE\brackets{ (\vba-\bar{\vba})(\vba-\bar{\vba}) } \\
+                            &= \alpha^2\EE\brackets{\vbSigma_{\vba}}
+    \end{split}
+  \]
+\end{proof}
+
+\begin{remark}
+  How does this arbitrary scale propagate? How does it affect downstream hypothesis tests?
+\end{remark}
+\end{frame}
+
+\begin{frame}{Rank-deficient Covariance Matrices}
+  Covariance in the direction of a homogeneous vector is 0 since 
+  it is arbitrary. This is captured by enforcing
+  \[
+    \vbSigma_{\vbz}\vbz = \vbzero.
+  \]
+\end{frame}
+  
+%\begin{frame}[fragile]{Gauss-Newton Approximation to the Hessian}
+%  Suppose $\mathcal{J}(\vbx,\vby)=\|\ve(\vbx,\vby)\|_2^2$.
+%  \vspace{1em}y
+%  Then
+%  \[
+%  \vbH_{\mathcal{J}} = 2\left(\vbJ^{\T}_{\mathcal{J}}\vbJ_{\mathcal{J}}+\sum_i e_i(\vbx,\vby)^{\T} \right)
+%  \]
+%\end{frame}
+%
+%\begin{frame}
+%  Then (1) can be applied to propogate the covariance
+%
+%  \begin{equation}
+%    \Sigma_{\vby} \approx \vbJ_{\vby}(\vbx)\Sigma_{\vbx}\vbJ_{\vby}(\vbx)^{\T}.
+%  \end{equation}
+%\end{frame}
+
+\begin{frame}
+  \begin{remark}
+    The fundamental matrix $\vbF$ is a rank-two matrix that relates
+    point correspondences $\set{\cspond{\vbx_i}{\vbx'_i}}$ in
+    stereo images.
+  \end{remark}
+  
+  \smallskip
+  
+  For noiseless measurements, the epipolar line
+  \[
+    \vbl' = \vbF\vbx
+  \]
+  in the second image contains $\vbx'$
+  \[
+    \vbl'^{\T}\vbx' = 0.
+  \]
+\end{frame}
+
+\begin{frame}[fragile]{Seven-point Method}
+  This epipolar constraint $\vbx^{'\T} \vbF \vbx=0$ can be written as
+  \[
+    \label{eq:F_constraint}
+    \vbm^\T_i \vect \vbF = \vbx_i \otimes \vbx'_i  \vect \vbF = 0.
+  \]
+
+  \smallskip
+  
+  \begin{enumerate}[(i)]
+  \item Homogeneous constraints of the form \eqref{eq:F_constraint} are
+    stacked in a design matrix.
+  \item $\vbF$ has 7 degrees of freedom, so 7 equations are needed.
+  \end{enumerate}
+
+  \smallskip
+  
+  Letting $\vbz = \operatorname{vec}(\vbF^{\T})$ we have
+  \[
+    \label{eq:sevenpt_linear}
+    \vbM\vbz = \vbzero,
+  \]
+  where $\vbM \in \mathcal{M}_{7 \times 9}(\Re)$.
+
+  \begin{result}
+    The two-dimensional kernel of $\vbM$ contains either one or three
+    solutions for the fundamental matrix.
+  \end{result}
+\end{frame}
+ 
+\begin{frame}[fragile]{Imposing Rank Two Constraint}
+  Denote the basis vectors of $\ker(\vbM)$ as $\vbf_1$ and $\vbf_2$.
+
+  \smallskip
+  
+  $\vbF$ is singular, so
+  \begin{equation}
+    \label{eq:Fcubic_eq}
+    \det \operatorname{vec}^{\inv}_{3\times3} (\vbf_1+\alpha_i \vbf_2) = 0.
+  \end{equation}
+
+  \smallskip
+  
+  There are either one or three roots to the cubic induced by
+  \eqref{eq:Fcubic_eq}, which are used to construct the solutions
+  \begin{equation}
+    \label{eq:estimateF}
+    \vbF_i = \operatorname{vec}^{\inv}_{3\times3} (\vbf_1+\alpha_i \vbf_2)^{\T}.
+  \end{equation}
+
+  Let $\vbF \in \{ \vbF_i \}$ be a solution.
+  \medskip
+
+  Matrix $\lambda \vbF^{*}_i$ is also a solution to \eqref{eq:sevenpt_linear} for nonzero $\lambda$.
+\end{frame}
+
+\begin{frame}{Covariance Propagation}
+  \medskip
+  
+  Restrict solutions to lie on the hypersphere
+  \[
+    \vbF^{*} = \frac{\vbF}{\| \vbF^{*} \|}
+  \]
+  Consider the constraint equations as residuals, namely
+  \[
+  \mathcal{J}(\vbx,\vbf)= \| \vbM\vbf \|^2 = \|\vbepsilon \|^2 = \sum_i \vbepsilon_i^2  = \sum_i \| \vbx[i]^{\prime \T} \vbF \vbx[i] \|^2
+  \]
+  
+  Let $\vbF^{*}$ be computed for measurements $\vbx_0$ by the seven-point method.
+  \bigskip
+
+  $\mathcal{J}(\vbx_0,\vbf^*)$ is 0, so  $\pdv*{\mathcal{J}(\vbx,\vbf)}{\vbf}{(\vbx_0,\vbf^*)} = \vbzero$.
+\end{frame}
+
+%\begin{frame}
+%  $\vbf^*$ is not a minimal parameterization.
+%  \bigskip
+%
+%  We must account for the rank-two constraint and scale ambiguity.
+%  \bigskip
+%  
+%  Let $\alpha,\beta \in \Re$ amd $g_2 \in \Re^3$ and $g_3 \in \Re^2$, and $g_1 = \alpha g_2 + \beta \cvec{g_3,f_{33}}$
+%
+%  Then parameter vector $\theta = \rvec{\alpha,\beta,g_2,g_3}$
+%  \[
+%    \vbf(\theta) = \cvec{g_1,g_2,g_3,f_{33}}
+%  \]
+%  
+%  and the objective becomes $\mathcal{J}(\vbx,\theta)$
+%\end{frame}
+%
+%\begin{frame}
+%  \begin{equation}
+%    \vbJ_{\theta} = \pdv{\mathcal{J}}{\theta}^{\inv}\pdv{\mathcal{J}}{\theta \vbx}
+%  \end{equation}
+%  \bigskip
+%  where $\vbJ_{\theta} \in \Re^{7 \times 28}$ so that $\vbSigma_\theta = \vbJ_{\theta}\vbSigma_{\vbx}\vbJ^\T_{\theta} $
+%
+%  \bigskip
+%  and
+%
+%  \bigskip
+%  $\vbJ_{\vbf} = \odv{\vbf}{\theta}$ so that  $\Sigma_f = \vbJ_{\vbf} \Sigma_{\theta} \vbJ^{\T}_{\vbf}$.
+%
+%
+%\end{frame}
+
+\end{document}

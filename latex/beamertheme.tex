@@ -1,0 +1,52 @@
+\setbeamertemplate{frametitle} 
+{
+  \begin{centering}
+    \smallskip 
+    \insertframetitle\par 
+    \smallskip
+  \end{centering}} 
+
+\setbeamertemplate{itemize item}{$\bullet$} 
+\setbeamertemplate{navigation symbols}{} 
+\setbeamertemplate{footline}[text line]{% 
+  \hfill\strut{% 
+    \scriptsize\sf\color{black!60}% 
+    \quad\insertframenumber 
+  }% 
+  \hfill 
+} 
+
+\setbeamerfont{title}{size=\Huge}
+\setbeamerfont{frametitle}{size=\LARGE}
+
+% Define some colors: 
+\definecolor{DarkFern}{HTML}{407428} 
+\definecolor{DarkCharcoal}{HTML}{4D4944} 
+\colorlet{Fern}{DarkFern!85!white} 
+\colorlet{Charcoal}{DarkCharcoal!85!white} 
+\colorlet{LightCharcoal}{Charcoal!50!white} 
+\colorlet{AlertColor}{orange!80!black} 
+\colorlet{DarkRed}{red!70!black} 
+\colorlet{DarkBlue}{blue!70!black} 
+\colorlet{DarkGreen}{green!70!black} 
+\definecolor{purple(munsell)}{rgb}{0.62, 0.0, 0.77}
+% Use the colors: 
+\setbeamercolor{title}{fg=purple} 
+\setbeamercolor{frametitle}{fg=purple} 
+\setbeamercolor{normal text}{fg=black} 
+\setbeamercolor{block title}{fg=purple,bg=white} 
+\setbeamercolor{block body}{fg=black,bg=white} 
+\setbeamercolor{alerted text}{fg=AlertColor} 
+\setbeamercolor{itemize item}{fg=Charcoal}
+
+\let\oldblock\block
+\let\endoldblock\endblock
+
+% change block by adding smallskip
+\renewenvironment{block}[1]
+{\begin{oldblock}{#1}
+    \smallskip
+  }
+  { 
+  \end{oldblock}
+}
