@@ -1,0 +1,52 @@
+%%%%%%%%% content delimiters
+\NewDocumentCommand\secref{m}{Section~{\ref{#1}}}
+\NewDocumentCommand\figref{m}{Figure~{\ref{#1}}}
+\NewDocumentCommand\tabref{m}{Table~{\ref{#1}}}
+\NewDocumentCommand\secsref{m}{Sections~{\ref{#1}}}
+\NewDocumentCommand\figsref{m}{Figures~{\ref{#1}}}
+\NewDocumentCommand\tabsref{m}{Tables~{\ref{#1}}}
+\NewDocumentCommand\algref{m}{Algorithm~{\ref{#1}}}
+
+%%%%%%%%% abbreviations
+\makeatletter
+\DeclareRobustCommand\onedot{\futurelet\@let@token\@onedot}
+\def\@onedot{\ifx\@let@token.\else.\null\fi\xspace}
+\def\eg{\emph{e.g}\onedot} \def\Eg{\emph{E.g}\onedot}
+\def\ie{\emph{i.e}\onedot} \def\Ie{\emph{I.e}\onedot}
+\def\cf{\emph{c.f}\onedot} \def\Cf{\emph{C.f}\onedot}
+\def\etc{\emph{etc}\onedot} \def\vs{\emph{vs}\onedot}
+\def\wrt{w.r.t\onedot} \def\dof{d.o.f\onedot}
+\def\etal{\emph{et al}\onedot}
+\makeatother
+
+%%%%%%%%%% colors
+\definecolor{mycolor1}{rgb}{0,0,0}%
+\definecolor{mycolor2}{rgb}{1,0,1}%
+\definecolor{mycolor3}{rgb}{0,1,1}%
+\definecolor{mycolor4}{rgb}{0,0,1}%
+\definecolor{mycolor5}{rgb}{0,1,0}%
+\definecolor{betteryellow}{rgb}{1,0.8824,0.0980}
+\definecolor{lavender}{rgb}{0.902,0.7451,1.0}
+\definecolor{olive}{rgb}{0.5020,0.5020,0} 
+\definecolor{orange}{rgb}{1,0.5,0} 
+\definecolor{bettergreen}{rgb}{0,0.6,0.3}
+
+\definecolor{blue}{HTML}{4069B0}
+\definecolor{lightorange}{HTML}{FF8F00}
+\definecolor{orange}{HTML}{E45611}
+\definecolor{darkorange}{HTML}{B85325}
+\definecolor{lightgreen}{HTML}{34DC5B}
+\definecolor{green}{HTML}{28A745}
+\definecolor{lightgray}{HTML}{656972}
+\definecolor{gray}{HTML}{53585F}
+\definecolor{darkgray}{HTML}{333333}
+\definecolor{red}{HTML}{D61901}
+\definecolor{magenta}{HTML}{CC00CC}
+\definecolor{cyan}{HTML}{00FFFF}
+
+\def\firstpl#1{\textcolor{bettergreen}{\textbf{#1}}}
+\def\secondpl#1{\textcolor{lightorange}{\textbf{#1}}}
+\def\stateofart#1{\textbf{#1}}
+\def\red#1{\textcolor{red}{\textbf{#1}}}
+
+\newcommand{\mycbox}[1]{\tikz{\path[draw=#1,fill=#1] (0,0) rectangle (5pt,5pt);}}

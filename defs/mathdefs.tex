@@ -1,0 +1,144 @@
+\DeclareMathOperator{\rank}{rank}%
+\DeclareMathOperator{\vect}{vec}%
+\DeclareMathOperator{\atantwo}{atan2}%
+\DeclareMathOperator*{\argmin}{argmin}%
+\DeclareMathOperator*{\argmax}{argmax}%
+
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\DeclarePairedDelimiter{\innerproduct}{\langle}{\rangle}
+
+\DeclarePairedDelimiter{\parenfences}{(}{)}
+\DeclarePairedDelimiter{\brackets}{[}{]}
+\DeclarePairedDelimiter{\coord}{(}{)}
+\DeclarePairedDelimiterX{\sksym}[1]{[}{]_{\times}}{#1}
+
+% just to make sure it exists
+\providecommand\given{}
+% can be useful to refer to this outside \Set
+\newcommand\SetSymbol[1][]{%
+\nonscript\:#1\vert
+\allowbreak
+\nonscript\:
+\mathopen{}}
+
+\DeclarePairedDelimiterX\set[1]\{\}{%
+\,\renewcommand\given{\SetSymbol[\delimsize]}
+#1\,
+}
+
+\NewDocumentCommand\Zz{}{\mathbb{Z}} % Integsers
+%\NewDocumentCommand\Re{}{\mathbb{R}} % Reals
+\NewDocumentCommand\Rp{}{\mathbb{RP}} % Real-Projective Space
+
+\NewDocumentCommand\Lgn{}{\mathcal{L}} % Lagrangian
+
+\NewDocumentCommand{\vertbar}{}{\rule[-1ex]{0.5pt}{2.5ex}}
+\NewDocumentCommand{\horzbar}{}{\rule[.5ex]{2.5ex}{0.5pt}}
+
+\NewDocumentCommand\sqnorm{m}{\norm{#1}^2} % inverse transpose
+\NewDocumentCommand\sqltwonorm{m}{\norm{#1}_2^2} % inverse transpose
+\NewDocumentCommand\inv{}{\mathsf{-1}} % inverse transpose
+\NewDocumentCommand\T{}{\top} % transpose
+\NewDocumentCommand\invT{}{-\top} % inverse transpose
+\NewDocumentCommand\diag{}{\operatorname{diag}\parenfences}
+
+\NewDocumentCommand\dist{O{}}{d_{\text{#1}}\parenfences}
+\NewDocumentCommand\sqdist{O{}}{d_{\text{#1}}^2\parenfences}
+\NewDocumentCommand\gaussian{}{\mathcal{N}\parenfences}
+
+\DeclareMathOperator{\EE}{\mathbb{E}}
+
+\newcommand*\rot{\rotatebox{90}}
+
+\NewDocumentCommand\cspond{mm}{#1\leftrightarrow#2}
+
+\NewDocumentCommand\removebslash{m}{%
+  {\catcode92=9 \endlinechar-1 \scantokens{#1}}%
+}
+
+\NewDocumentCommand\vecbold{m}{\bm{#1}}
+
+\ExplSyntaxOn
+
+\NewDocumentCommand\definevecbold{m}
+{
+  \clist_map_inline:nn { #1 }
+  {
+    \cs_new_protected:cpn { vb##1 } { \vecbold{##1} }
+  }
+}
+
+\NewDocumentCommand{\defineset}{m}
+{
+  \clist_map_inline:nn { #1 }
+  {
+    \cs_new_protected:cpn { s##1 } { \mathcal{##1} }
+  }
+}
+
+\clist_new:N \vectr_clist
+\NewDocumentCommand{\vectr}{O{\\}mO{b}}{
+  \clist_set:Nn \vectr_clist {#2} % Set the list
+  \begin{#3matrix}
+  \clist_use:Nn \vectr_clist {#1} % show it with separator from #1 (\\)
+  \end{#3matrix}
+}
+
+\NewDocumentCommand{\rvec}{mO{b}}{\vectr[&]{#1}[#2]}
+\NewDocumentCommand{\cvec}{mO{b}}{\vectr{#1}[#2]}
+
+\NewDocumentCommand{\rmat}{mO{b}}{
+  \clist_set:Nn \l_rmat_clist {#1} % Set the list
+  \begin{#2matrix}
+    \horzbar &
+    \clist_use:Nn \l_rmat_clist {& \horzbar \\ \horzbar &}  % show it with separator from #1 (\\)
+    & \horzbar
+  \end{#2matrix}
+}
+
+\NewDocumentCommand{\cmat}{mO{b}}{
+  \clist_set:Nn \l_cmat_clist {#1} % Set the list
+  \begin{#2matrix}
+    & \clist_map_inline:Nn \l_cmat_clist { \vertbar & } \\
+    & \clist_use:Nn \l_cmat_clist {& } \\ % Set the list
+    & \clist_map_inline:Nn \l_cmat_clist { \vertbar & } \\
+  \end{#2matrix}
+}
+
+\ExplSyntaxOff
+
+\definevecbold{A,B,C,D,E,F,H,I,J,K,M,P,Q,R,T,U,V,W,X,Y,Z,a,b,c,d,e,f,h,l,m,n,o,p,r,t,u,v,x,y,z}
+\defineset{A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z}
+
+\NewDocumentCommand\linf{}{\vbl_\infty}
+\NewDocumentCommand\vbSigma{}{\vecbold{\Sigma}}
+\NewDocumentCommand\vbphi{}{\vecbold{\phi}}
+\NewDocumentCommand\vbzero{}{\vecbold{0}}
+\NewDocumentCommand\vbdelta{}{\vecbold{\delta}}
+\NewDocumentCommand\vbepsilon{}{\vecbold{\epsilon}}
+\NewDocumentCommand\vbmu{}{\vecbold{\mu}}
+
+\def\mKRt{\ensuremath{\mK \begin{bmatrix} \mR & \vt \end{bmatrix}}}
+
+\newcommand*\Let[2]{\State #1 $\gets$ #2}
+
+\def\mupinvof#1{{{#1}^{-\lambda}}}
+
+\newcommand{\eps}{\varepsilon}
+\providecommand{\homogvec}[1]{\binom{n}{1}}
+\providecommand{\dotprod}[2]{\left\langle #1, #2 \right\rangle}
+
+\newenvironment{smallpmatrix}{\left(\begin{smallmatrix}}{\end{smallmatrix}\right)}
+
+
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\setlength\aboverulesep{0pt}
+\setlength\belowrulesep{0pt}
+
+\newtheorem*{remark}{Remark}
+\newtheorem*{desiderata}{Desiderata}
+\newtheorem*{result}{Result}
+
+
